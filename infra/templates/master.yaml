@@ -77,9 +77,9 @@ Outputs:
   ApiGatewayDomainName:
     Value: !GetAtt ApiStack.Outputs.ApiGatewayDomainName
     Export:
-      Name: !Sub "${AWS::StackName}-ApiGatewayDomainName"
+      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayDomainName"
 
   ApiGatewayHostedZoneId:
     Value: !GetAtt ApiStack.Outputs.ApiGatewayHostedZoneId
     Export:
-      Name: !Sub "${AWS::StackName}-ApiGatewayHostedZoneId"
+      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayHostedZoneId"

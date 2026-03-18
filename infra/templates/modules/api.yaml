@@ -1,7 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: >
-  API Gateway HTTP para o Microservico de Notificacao.
-  Integra com Spring Cloud Function via AWS_PROXY Payload 1.0.
+Description: API Gateway HTTP para o Notification Service - OIDC Ready
 
 Parameters:
   ProjectName:
@@ -11,7 +9,6 @@ Parameters:
     AllowedValues: [dev, prod]
 
 Resources:
-
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -30,7 +27,6 @@ Resources:
         Fn::ImportValue: !Sub "${ProjectName}-${Environment}-LambdaArn"
       PayloadFormatVersion: '1.0'
 
-  # ALINHAMENTO BACKEND: Rota unica para envio de notificacoes
   NotificationRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -52,13 +48,8 @@ Resources:
         Fn::ImportValue: !Sub "${ProjectName}-${Environment}-LambdaArn"
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub
-        - "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/*"
-        - { ApiId: !Ref HttpApi }
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*/*"
 
-  # =====================================================
-  # DOMINIO CUSTOMIZADO (Mantendo seu padrao)
-  # =====================================================
   CustomDomain:
     Type: AWS::ApiGatewayV2::DomainName
     Properties:
@@ -66,23 +57,17 @@ Resources:
       DomainNameConfigurations:
         - CertificateArn: arn:aws:acm:us-east-1:365646127398:certificate/63e80d1b-c0cc-402b-a280-409296304096
           EndpointType: REGIONAL
-          SecurityPolicy: TLS_1_2
 
   ApiMapping:
     Type: AWS::ApiGatewayV2::ApiMapping
+    DependsOn: ApiStage
     Properties:
       ApiId: !Ref HttpApi
       DomainName: !Ref CustomDomain
-      Stage: !Ref Environment
-      ApiMappingKey: ""
+      Stage: !Ref ApiStage
 
 Outputs:
-  ApiEndpoint:
-    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
-
-  CustomDomainEndpoint:
-    Value: "https://api.asantanadev.com/notify"
-
+  # ESSENCIAL PARA O DNS.YAML
   ApiGatewayDomainName:
     Value: !GetAtt CustomDomain.RegionalDomainName
     Export:

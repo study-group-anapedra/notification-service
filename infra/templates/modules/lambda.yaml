@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Lambda do Microservico de Notificacao - Java Spring Cloud Function
+Description: Lambda e API Gateway para o Notification Service
 
 Parameters:
   ProjectName:
@@ -12,20 +12,20 @@ Parameters:
     Default: 512
   LambdaTimeout:
     Type: Number
-    Default: 30  # Essencial para o Cold Start do Spring
+    Default: 30
   ArtifactBucket:
     Type: String
   ArtifactKey:
     Type: String
 
 Resources:
+  # 1. A Função Lambda
   NotificationLambda:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub "${ProjectName}-${Environment}-handler"
       Runtime: java17 
-      # ALINHAMENTO BACKEND: Handler padrao para Spring Cloud Function
-      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker
+      Handler: org.anasantana.handler.NotificationHandler::handleRequest
       MemorySize: !Ref LambdaMemory
       Timeout: !Ref LambdaTimeout
       Role: 
@@ -36,42 +36,37 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
-          # ALINHAMENTO BACKEND: Nome do @Bean no seu LambdaConfig.java
-          SPRING_CLOUD_FUNCTION_DEFINITION: notificationFunction
-          TABLE_NAME: 
-            Fn::ImportValue: !Sub "${ProjectName}-${Environment}-DynamoTable"
-      Tags:
-        - Key: project
-          Value: !Ref ProjectName
-        - Key: environment
-          Value: !Ref Environment
 
-  LambdaServicePolicy:
-    Type: AWS::IAM::Policy
+  # 2. O API Gateway (Necessário para o DNS funcionar)
+  NotificationApi:
+    Type: AWS::ApiGateway::RestApi
     Properties:
-      PolicyName: !Sub "${ProjectName}-${Environment}-service-policy"
-      Roles:
-        - Fn::ImportValue: !Sub "${ProjectName}-${Environment}-LambdaExecutionRoleName"
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          # Permissao para Logs no DynamoDB
-          - Effect: Allow
-            Action:
-              - dynamodb:PutItem
-              - dynamodb:GetItem
-            Resource: 
-              - Fn::ImportValue: !Sub "${ProjectName}-${Environment}-DynamoTableArn"
-          # ALINHAMENTO BACKEND: Permissao para envio de E-mail via SES
-          - Effect: Allow
-            Action:
-              - ses:SendEmail
-              - ses:SendRawEmail
-            Resource: "*" 
+      Name: !Sub "${ProjectName}-${Environment}-api"
+
+  # 3. O Domínio Personalizado no API Gateway
+  ApiCustomDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      RegionalCertificateArn: !ImportValue 
+        Fn::Sub: "${ProjectName}-${Environment}-CertificateArn"
+      DomainName: api.asantanadev.com
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
 
 Outputs:
+  # ESSENCIAIS PARA O SEU ARQUIVO DNS.YAML FUNCIONAR:
+  ApiGatewayDomainName:
+    Value: !GetAtt ApiCustomDomain.RegionalDomainName
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayDomainName"
+
+  ApiGatewayHostedZoneId:
+    Value: !GetAtt ApiCustomDomain.RegionalHostedZoneId
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayHostedZoneId"
+
   LambdaArn:
-    Description: ARN da Lambda de Notificacao
     Value: !GetAtt NotificationLambda.Arn
     Export:
       Name: !Sub "${ProjectName}-${Environment}-LambdaArn"
