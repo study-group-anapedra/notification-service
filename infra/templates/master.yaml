@@ -20,7 +20,6 @@ Parameters:
     Description: Bucket S3 onde estao os templates e o JAR
 
 Resources:
-
   InfraBaseStack:
     Type: AWS::CloudFormation::Stack
     Properties:

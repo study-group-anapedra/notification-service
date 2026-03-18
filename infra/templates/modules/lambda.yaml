@@ -1,72 +1,77 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Lambda e API Gateway para o Notification Service
+Description: Lambda do Notification Service
 
 Parameters:
   ProjectName:
     Type: String
+
   Environment:
     Type: String
-    AllowedValues: [dev, prod]
+    AllowedValues:
+      - dev
+      - prod
+
   LambdaMemory:
     Type: Number
     Default: 512
+
   LambdaTimeout:
     Type: Number
     Default: 30
+
   ArtifactBucket:
     Type: String
+
   ArtifactKey:
     Type: String
 
 Resources:
-  # 1. A Função Lambda
   NotificationLambda:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub "${ProjectName}-${Environment}-handler"
-      Runtime: java17 
+      Runtime: java17
       Handler: org.anasantana.handler.NotificationHandler::handleRequest
       MemorySize: !Ref LambdaMemory
       Timeout: !Ref LambdaTimeout
-      Role: 
+      Role:
         Fn::ImportValue: !Sub "${ProjectName}-${Environment}-LambdaExecutionRoleArn"
       Code:
-        S3Bucket: !Ref ArtifactBucket 
+        S3Bucket: !Ref ArtifactBucket
         S3Key: !Ref ArtifactKey
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
+          TABLE_NAME:
+            Fn::ImportValue: !Sub "${ProjectName}-${Environment}-DynamoTable"
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+        - Key: environment
+          Value: !Ref Environment
 
-  # 2. O API Gateway (Necessário para o DNS funcionar)
-  NotificationApi:
-    Type: AWS::ApiGateway::RestApi
+  LambdaDynamoPermission:
+    Type: AWS::IAM::Policy
     Properties:
-      Name: !Sub "${ProjectName}-${Environment}-api"
-
-  # 3. O Domínio Personalizado no API Gateway
-  ApiCustomDomain:
-    Type: AWS::ApiGateway::DomainName
-    Properties:
-      RegionalCertificateArn: !ImportValue 
-        Fn::Sub: "${ProjectName}-${Environment}-CertificateArn"
-      DomainName: api.asantanadev.com
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
+      PolicyName: !Sub "${ProjectName}-${Environment}-dynamo-policy"
+      Roles:
+        - Fn::ImportValue: !Sub "${ProjectName}-${Environment}-LambdaExecutionRoleName"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+              - dynamodb:UpdateItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource:
+              - Fn::ImportValue: !Sub "${ProjectName}-${Environment}-DynamoTableArn"
 
 Outputs:
-  # ESSENCIAIS PARA O SEU ARQUIVO DNS.YAML FUNCIONAR:
-  ApiGatewayDomainName:
-    Value: !GetAtt ApiCustomDomain.RegionalDomainName
-    Export:
-      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayDomainName"
-
-  ApiGatewayHostedZoneId:
-    Value: !GetAtt ApiCustomDomain.RegionalHostedZoneId
-    Export:
-      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayHostedZoneId"
-
   LambdaArn:
+    Description: ARN da Lambda
     Value: !GetAtt NotificationLambda.Arn
     Export:
       Name: !Sub "${ProjectName}-${Environment}-LambdaArn"
