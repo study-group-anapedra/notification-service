@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Master Stack do Microservico de Notificacao.
+  Cria a infraestrutura completa de forma orquestrada.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: "Nome do projeto (ex: notification-service)"
+
+  Environment:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Ambiente de deploy
+
+  ArtifactsBucket:
+    Type: String
+    Description: Bucket S3 onde estao os templates e o JAR
+
+Resources:
+
+  # ======================================
+  # INFRA BASE (IAM + LOGS)
+  # ======================================
+  InfraBaseStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${ArtifactsBucket}/modules/infra-base.yaml"
+      Parameters:
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+
+  # ======================================
+  # DATABASE (DYNAMODB)
+  # ======================================
+  DatabaseStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: InfraBaseStack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${ArtifactsBucket}/modules/database.yaml"
+      Parameters:
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+
+  # ======================================
+  # LAMBDA (ALINHADA COM O NOVO JAR)
+  # ======================================
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: DatabaseStack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${ArtifactsBucket}/modules/lambda.yaml"
+      Parameters:
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+        LambdaMemory: 512
+        LambdaTimeout: 30 # Aumentado para o Spring Boot subir sem erro
+        ArtifactBucket: !Ref ArtifactsBucket
+        # ALINHAMENTO BACKEND: Nome do JAR gerado no seu pom.xml
+        ArtifactKey: "lambda/notification-service.jar"
+
+  # ======================================
+  # API GATEWAY
+  # ======================================
+  ApiStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://s3.amazonaws.com/${ArtifactsBucket}/modules/api.yaml"
+      Parameters:
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+
+Outputs:
+  ApiGatewayDomainName:
+    Value: !GetAtt ApiStack.Outputs.ApiGatewayDomainName
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiGatewayDomainName"
+
+  ApiGatewayHostedZoneId:
+    Value: !GetAtt ApiStack.Outputs.ApiGatewayHostedZoneId
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiGatewayHostedZoneId"

@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "ProjectName",
+    "ParameterValue": "notification-service"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "DomainName",
+    "ParameterValue": "api-dev.asantanadev.com"
+  },
+  {
+    "ParameterKey": "HostedZoneId",
+    "ParameterValue": "Z05813481E1GHZSOTI0HO"
+  }
+]

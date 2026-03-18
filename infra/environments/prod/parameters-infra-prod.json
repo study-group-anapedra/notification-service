@@ -1,0 +1,26 @@
+[
+  {
+    "ParameterKey": "ProjectName",
+    "ParameterValue": "notification-service"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "prod"
+  },
+  {
+    "ParameterKey": "LambdaMemory",
+    "ParameterValue": "1024"
+  },
+  {
+    "ParameterKey": "LambdaTimeout",
+    "ParameterValue": "30"
+  },
+  {
+    "ParameterKey": "ArtifactBucket",
+    "ParameterValue": "notification-artifacts-ana"
+  },
+  {
+    "ParameterKey": "ArtifactKey",
+    "ParameterValue": "lambda/notification-service.jar"
+  }
+]

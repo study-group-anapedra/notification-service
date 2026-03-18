@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "ProjectName",
+    "ParameterValue": "notification-service"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "dev"
+  }
+]

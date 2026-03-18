@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "notificationService",
+    "ParameterValue": "notification-service"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "prod"
+  }
+]
