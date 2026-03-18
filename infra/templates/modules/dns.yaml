@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  DNS do projeto URL Shortener.
+  DNS do projeto Notification Service.
   Cria o registro no Route53 apontando para o domínio real do API Gateway.
 
 Parameters:

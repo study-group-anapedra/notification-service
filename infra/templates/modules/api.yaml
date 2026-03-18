@@ -1,22 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: API Gateway HTTP para o Notification Service - OIDC Ready
+Description: >
+  API Gateway HTTP para o projeto Notification Service.
+  Integra com a Lambda via AWS_PROXY usando Payload 1.0.
+  Com domínio customizado api.asantanadev.com e mapeamento no root.
 
 Parameters:
   ProjectName:
     Type: String
+
   Environment:
     Type: String
-    AllowedValues: [dev, prod]
+    AllowedValues:
+      - dev
+      - prod
 
 Resources:
+
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
       Name: !Sub "${ProjectName}-${Environment}-api"
       ProtocolType: HTTP
       CorsConfiguration:
-        AllowMethods: [POST, OPTIONS]
-        AllowOrigins: ["*"]
+        AllowMethods:
+          - POST
+          - OPTIONS
+        AllowOrigins:
+          - "*"
 
   LambdaIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -27,7 +37,7 @@ Resources:
         Fn::ImportValue: !Sub "${ProjectName}-${Environment}-LambdaArn"
       PayloadFormatVersion: '1.0'
 
-  NotificationRoute:
+  NotifyRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref HttpApi
@@ -48,7 +58,9 @@ Resources:
         Fn::ImportValue: !Sub "${ProjectName}-${Environment}-LambdaArn"
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*/*"
+      SourceArn: !Sub
+        - "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/*"
+        - { ApiId: !Ref HttpApi }
 
   CustomDomain:
     Type: AWS::ApiGatewayV2::DomainName
@@ -57,23 +69,37 @@ Resources:
       DomainNameConfigurations:
         - CertificateArn: arn:aws:acm:us-east-1:365646127398:certificate/63e80d1b-c0cc-402b-a280-409296304096
           EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
 
   ApiMapping:
     Type: AWS::ApiGatewayV2::ApiMapping
-    DependsOn: ApiStage
     Properties:
       ApiId: !Ref HttpApi
       DomainName: !Ref CustomDomain
-      Stage: !Ref ApiStage
+      Stage: !Ref Environment
+      ApiMappingKey: ""
 
 Outputs:
-  # ESSENCIAL PARA O DNS.YAML
+  ApiEndpoint:
+    Description: URL base da API (domínio AWS)
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+
+  CustomDomainEndpoint:
+    Description: URL base da API com domínio próprio
+    Value: "https://api.asantanadev.com"
+
+  # ===========================
+  # EXPORTS PARA O DNS
+  # ===========================
+
   ApiGatewayDomainName:
+    Description: Domain name real do API Gateway para alias no Route53
     Value: !GetAtt CustomDomain.RegionalDomainName
     Export:
       Name: !Sub "${ProjectName}-${Environment}-ApiGatewayDomainName"
 
   ApiGatewayHostedZoneId:
+    Description: HostedZoneId real do API Gateway para alias no Route53
     Value: !GetAtt CustomDomain.RegionalHostedZoneId
     Export:
       Name: !Sub "${ProjectName}-${Environment}-ApiGatewayHostedZoneId"

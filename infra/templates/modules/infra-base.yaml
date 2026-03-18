@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Infra base compartilhada para o projeto URL Shortener
+Description: Infra base compartilhada para o projeto Notification Service
 
 Parameters:
   ProjectName:
     Type: String
-    Default: url-shortener
+    Default: notification-service
   Environment:
     Type: String
     AllowedValues: [dev, prod]
@@ -39,7 +39,6 @@ Outputs:
     Export:
       Name: !Sub "${ProjectName}-${Environment}-LambdaExecutionRoleArn"
 
-  # ADICIONE ESTE BLOCO ABAIXO:
   LambdaExecutionRoleName:
     Value: !Ref LambdaExecutionRole
     Export:

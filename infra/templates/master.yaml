@@ -1,7 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Master Stack do Microservico de Notificacao.
-  Cria a infraestrutura completa de forma orquestrada.
+  Master Stack do projeto Notification Service.
+  Cria toda a infraestrutura principal (sem DNS):
+  - Infra base (IAM, Logs)
+  - DynamoDB
+  - Lambda
+  - API Gateway
 
 Parameters:
   ProjectName:
@@ -17,9 +21,13 @@ Parameters:
 
   ArtifactsBucket:
     Type: String
-    Description: Bucket S3 onde estao os templates e o JAR
+    Description: Bucket S3 onde estão os templates dos módulos
 
 Resources:
+
+  # ======================================
+  # INFRA BASE (IAM + LOGS)
+  # ======================================
   InfraBaseStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -28,6 +36,9 @@ Resources:
         ProjectName: !Ref ProjectName
         Environment: !Ref Environment
 
+  # ======================================
+  # DATABASE (DYNAMODB)
+  # ======================================
   DatabaseStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: InfraBaseStack
@@ -37,6 +48,9 @@ Resources:
         ProjectName: !Ref ProjectName
         Environment: !Ref Environment
 
+  # ======================================
+  # LAMBDA
+  # ======================================
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: DatabaseStack
@@ -45,11 +59,14 @@ Resources:
       Parameters:
         ProjectName: !Ref ProjectName
         Environment: !Ref Environment
-        LambdaMemory: "512"
-        LambdaTimeout: "30"
+        LambdaMemory: 512
+        LambdaTimeout: 10
         ArtifactBucket: !Ref ArtifactsBucket
         ArtifactKey: "lambda/notification-service.jar"
 
+  # ======================================
+  # API GATEWAY
+  # ======================================
   ApiStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: LambdaStack
@@ -61,11 +78,13 @@ Resources:
 
 Outputs:
   ApiGatewayDomainName:
+    Description: "Domain name real do API Gateway para uso no DNS"
     Value: !GetAtt ApiStack.Outputs.ApiGatewayDomainName
     Export:
-      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayDomainName"
+      Name: !Sub "${AWS::StackName}-ApiGatewayDomainName"
 
   ApiGatewayHostedZoneId:
+    Description: "Hosted Zone ID real do API Gateway para uso no DNS"
     Value: !GetAtt ApiStack.Outputs.ApiGatewayHostedZoneId
     Export:
-      Name: !Sub "${ProjectName}-${Environment}-ApiGatewayHostedZoneId"
+      Name: !Sub "${AWS::StackName}-ApiGatewayHostedZoneId"

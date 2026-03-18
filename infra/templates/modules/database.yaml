@@ -4,20 +4,21 @@ Description: Tabela DynamoDB para Logs de Notificacao - Projeto Notification Ser
 Parameters:
   ProjectName:
     Type: String
+
   Environment:
     Type: String
-    AllowedValues: [dev, prod]
+    AllowedValues:
+      - dev
+      - prod
 
 Resources:
   NotificationLogsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      # ALINHAMENTO BACKEND: Nome que identifica logs de notificacao
       TableName: !Sub "${ProjectName}-${Environment}-logs"
       BillingMode: PAY_PER_REQUEST
 
       AttributeDefinitions:
-        # ALINHAMENTO BACKEND: Campo 'id' que seu Java gera via UUID
         - AttributeName: id
           AttributeType: S
 

@@ -7,8 +7,27 @@
     "ParameterKey": "Environment",
     "ParameterValue": "prod"
   },
+
+  {
+       "ParameterKey": "LambdaMemory", 
+       "ParameterValue": "1024" 
+  },
+
+  {
+       "ParameterKey": "LambdaTimeout",
+       "ParameterValue": "15" 
+  },
+
+
   {
     "ParameterKey": "ArtifactsBucket",
     "ParameterValue": "notification-service-artifacts-ana"
+  },
+
+  { 
+    "ParameterKey": "ArtifactKey",  
+    "ParameterValue": "lambda/notification-service.jar" 
   }
+
 ]
+

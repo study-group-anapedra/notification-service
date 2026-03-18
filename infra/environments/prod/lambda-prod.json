@@ -13,7 +13,7 @@
   },
   {
     "ParameterKey": "LambdaTimeout",
-    "ParameterValue": "30"
+    "ParameterValue": "15"
   },
   {
     "ParameterKey": "ArtifactBucket",

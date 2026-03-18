@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Lambda do projeto URL Shortener com permissão para Tabela e GSI
+Description: Lambda do projeto Notification Service com permissão para Tabela e GSI
 Parameters:
   ProjectName:
     Type: String
@@ -19,13 +19,13 @@ Parameters:
   ArtifactKey:
     Type: String
 Resources:
-  UrlShortenerLambda:
+  NotificationServiceLambda:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName:
         Fn::Sub: ${ProjectName}-${Environment}-handler
       Runtime: java17
-      Handler: org.anasantana.handler.UrlShortenerHandler::handleRequest
+      Handler: org.anasantana.handler.NotificationServiceHandler::handleRequest
       MemorySize:
         Ref: LambdaMemory
       Timeout:
@@ -82,7 +82,7 @@ Outputs:
     Description: ARN da Lambda
     Value:
       Fn::GetAtt:
-      - UrlShortenerLambda
+      - NotificationServiceLambda
       - Arn
     Export:
       Name:
