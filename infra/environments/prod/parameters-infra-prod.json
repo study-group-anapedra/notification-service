@@ -8,19 +8,7 @@
     "ParameterValue": "prod"
   },
   {
-    "ParameterKey": "LambdaMemory",
-    "ParameterValue": "1024"
-  },
-  {
-    "ParameterKey": "LambdaTimeout",
-    "ParameterValue": "30"
-  },
-  {
-    "ParameterKey": "ArtifactBucket",
+    "ParameterKey": "ArtifactsBucket",
     "ParameterValue": "notification-artifacts-ana"
-  },
-  {
-    "ParameterKey": "ArtifactKey",
-    "ParameterValue": "lambda/notification-service.jar"
   }
 ]
