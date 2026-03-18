@@ -74,6 +74,7 @@ Resources:
         Environment: !Ref Environment
 
 Outputs:
+  # ALINHAMENTO PARA O DNS.YAML ENCONTRAR OS VALORES
   ApiGatewayDomainName:
     Value: !GetAtt ApiStack.Outputs.ApiGatewayDomainName
     Export:
