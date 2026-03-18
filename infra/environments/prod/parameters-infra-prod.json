@@ -9,6 +9,6 @@
   },
   {
     "ParameterKey": "ArtifactsBucket",
-    "ParameterValue": "notification-artifacts-ana"
+    "ParameterValue": "notification-service-artifacts-ana"
   }
 ]

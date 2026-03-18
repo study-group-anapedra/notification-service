@@ -46,26 +46,22 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 1) Build da Lambda
       - name: Build da Lambda
         run: |
           cd notification-service
           mvn clean package -DskipTests
 
-      # 2) Upload do JAR para o S3
-      # CORREÇÃO: O nome do arquivo JAR deve ser o que o Maven gera (SNAPSHOT-aws.jar)
       - name: Upload do JAR para o S3
         run: |
           aws s3 cp notification-service/target/notification-service-0.0.1-SNAPSHOT-aws.jar \
             s3://${{ env.ARTIFACT_BUCKET }}/${{ env.ARTIFACT_KEY }}
 
-      # 3) Upload dos templates CloudFormation
       - name: Upload dos módulos CloudFormation para o S3
         run: |
           aws s3 sync infra/templates/modules \
-            s3://${{ env.ARTIFACT_BUCKET }}/modules
+            s3://${{ env.ARTIFACT_BUCKET }}/modules \
+            --delete
 
-      # 4) Package do template master
       - name: Package do template master
         run: |
           aws cloudformation package \
@@ -73,7 +69,6 @@ jobs:
             --s3-bucket ${{ env.ARTIFACT_BUCKET }} \
             --output-template-file packaged-master.yaml
 
-      # 5) Deploy do master stack
       - name: Deploy do Master Stack
         run: |
           aws cloudformation deploy \
@@ -90,17 +85,21 @@ jobs:
     name: Deploy DNS (Route53)
     runs-on: ubuntu-latest
     needs: deploy-infra
+
     permissions:
       contents: read
       id-token: write
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
       - name: Configurar credenciais AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
       - name: Deploy DNS Stack
         run: |
           aws cloudformation deploy \

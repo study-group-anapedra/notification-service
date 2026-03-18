@@ -21,9 +21,6 @@ Parameters:
 
 Resources:
 
-  # ======================================
-  # INFRA BASE (IAM + LOGS)
-  # ======================================
   InfraBaseStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -32,9 +29,6 @@ Resources:
         ProjectName: !Ref ProjectName
         Environment: !Ref Environment
 
-  # ======================================
-  # DATABASE (DYNAMODB)
-  # ======================================
   DatabaseStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: InfraBaseStack
@@ -44,9 +38,6 @@ Resources:
         ProjectName: !Ref ProjectName
         Environment: !Ref Environment
 
-  # ======================================
-  # LAMBDA (ALINHADA COM O NOVO JAR)
-  # ======================================
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: DatabaseStack
@@ -55,15 +46,11 @@ Resources:
       Parameters:
         ProjectName: !Ref ProjectName
         Environment: !Ref Environment
-        LambdaMemory: 512
-        LambdaTimeout: 30 # Aumentado para o Spring Boot subir sem erro
+        LambdaMemory: "512"
+        LambdaTimeout: "30"
         ArtifactBucket: !Ref ArtifactsBucket
-        # ALINHAMENTO BACKEND: Nome do JAR gerado no seu pom.xml
         ArtifactKey: "lambda/notification-service.jar"
 
-  # ======================================
-  # API GATEWAY
-  # ======================================
   ApiStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: LambdaStack
