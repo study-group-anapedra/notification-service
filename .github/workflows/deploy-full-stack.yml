@@ -100,14 +100,15 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy DNS Stack
+      - name: Injetar Variaveis de Ambiente na Lambda
         run: |
-          aws cloudformation deploy \
-            --template-file infra/templates/modules/dns.yaml \
-            --stack-name ${{ env.STACK_NAME_DNS }} \
-            --no-fail-on-empty-changeset \
-            --parameter-overrides \
-              ProjectName=${{ env.PROJECT_NAME }} \
-              Environment=${{ env.ENVIRONMENT }} \
-              DomainName=${{ env.DOMAIN_NAME }} \
-              HostedZoneId=${{ env.HOSTED_ZONE_ID }}
+          aws lambda update-function-configuration --function-name ${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-handler \
+            --environment "Variables={ \
+              SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}, \
+              SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}, \
+              SPRING_MAIL_HOST=${{ vars.SPRING_MAIL_HOST }}, \
+              SPRING_MAIL_PORT=${{ vars.SPRING_MAIL_PORT }}, \
+              SPRING_CLOUD_FUNCTION_DEFINITION=${{ vars.SPRING_CLOUD_FUNCTION_DEFINITION }}, \
+              REGION_NAME=${{ env.AWS_REGION }}, \
+              TABLE_NAME=${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-logs \
+            }"

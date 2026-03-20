@@ -27,7 +27,7 @@ public class DynamoNotificationRepository {
         item.put("timestamp", AttributeValue.builder().s(log.getTimestamp()).build());
 
         PutItemRequest putItemRequest = PutItemRequest.builder()
-                .tableName("LogsNotificacao")
+                .tableName(System.getenv("TABLE_NAME"))
                 .item(item)
                 .build();
 

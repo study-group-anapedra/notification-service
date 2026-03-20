@@ -17,10 +17,11 @@
   },
   {
     "ParameterKey": "ArtifactBucket",
-    "ParameterValue": "notification-artifacts-ana"
+    "ParameterValue": "notification-service-artifacts-ana"
   },
   {
     "ParameterKey": "ArtifactKey",
-    "ParameterValue": "lambda/notification-service-0.0.1-SNAPSHOT-aws.jar"
+    "ParameterValue": "lambda/notification-service.jar"
+    
   }
 ]

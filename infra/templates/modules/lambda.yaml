@@ -24,7 +24,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${ProjectName}-${Environment}-handler"
       Runtime: java17 
-      Handler: org.anasantana.handler.NotificationServiceHandler::handleRequest
+      Handler: com.luizalebs.notification_service.handler.NotificationServiceHandler::handleRequest
       MemorySize: !Ref LambdaMemory
       Timeout: !Ref LambdaTimeout
       Role: 
